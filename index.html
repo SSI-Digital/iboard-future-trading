@@ -15,126 +15,86 @@
       <button class="icon-btn" id="backBtn" aria-label="Back">⟵</button>
       <div class="symbol-info">
         <div class="symbol-line">
-          <span class="symbol" id="symbolName">VN30F2509</span>
-          <span class="badge down" id="symbolChange">-3.19%</span>
+          <span class="symbol" id="symbolName">Phái sinh</span>
         </div>
       </div>
-    </div>
-    <div class="app-actions">
-      <button class="icon-btn" title="Search">🔍</button>
-      <button class="icon-btn" title="Alerts">⏰</button>
-      <button class="icon-btn" id="themeToggle" title="Đổi theme" aria-label="Toggle Theme">🌙</button>
-      <button class="icon-btn" title="More">⋮</button>
     </div>
   </header>
 
   <main class="screen" tabindex="0">
-    <section class="chart-section">
-      <div class="timeframes" role="tablist">
-        <button class="tf active">Line</button>
-        <button class="tf">1m</button>
-        <button class="tf">5m</button>
-        <button class="tf">15m</button>
-        <button class="tf">30m</button>
-        <button class="tf">60m</button>
-      </div>
-      <div class="chart-placeholder" id="chart">
-  <canvas id="miniChart" aria-label="Biểu đồ giá"></canvas>
-        <div class="price-ticker">
-          <div class="ticker-stats" style="margin-left:auto;">
-            <span>Cao: <b id="highPrice">--</b></span>
-            <span>Thấp: <b id="lowPrice">--</b></span>
-            <span>KL: <b id="vol24h">--</b></span>
+    <div class="fullchart-wrapper">
+      <div class="chart-overlay" aria-label="Thông tin tài khoản và vị thế">
+        <div class="overlay-row">
+          <div class="cell cell-unified">
+            <div class="seg balance-seg">
+              <div class="primary balance" id="balanceValue">432,987 VNĐ</div>
+              <div class="sub">TK: AB123456789</div>
+            </div>
+            <div class="seg position-seg">
+              <div class="primary profit" id="profitPercent">0.00%</div>
+              <div class="sub">1 vị thế</div>
+            </div>
+          </div>
+        </div>
+        <div class="overlay-center" aria-label="Mã phái sinh và biến động">
+          <div class="instrument" id="instrumentCode">VN30F2509</div>
+          <div class="instrument-change" id="instrumentChange">0.0 (0.00%)</div>
+          <div class="instrument-stats" aria-label="Cao Thấp và Khối lượng">
+            <span class="stat-item"><span class="label">Cao</span> <span id="instHigh">--</span></span>
+            <span class="divider">|</span>
+            <span class="stat-item"><span class="label">Thấp</span> <span id="instLow">--</span></span>
+            <span class="divider">|</span>
+            <span class="stat-item"><span class="label">KL</span> <span id="instVol">--</span></span>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- Long/Short sentiment bar -->
-    <div class="long-short-wrapper" aria-label="Tỷ lệ Long / Short">
-      <div class="ls-bar" id="lsBar">
-        <div class="ls-seg long" id="longSeg"><span id="longPct">Long 50%</span></div>
-        <div class="ls-seg short" id="shortSeg"><span id="shortPct">50% Short</span></div>
+      <canvas id="v2Chart" aria-label="Biểu đồ giá toàn màn hình"></canvas>
+  <div class="floating-price" id="v2Floating"><span class="fp-dot" aria-hidden="true"></span><span class="fp-value">--</span></div>
+      <!-- Vertical Long / Short ratio bar (positioned via CSS/JS) -->
+      <div class="long-short-vertical" aria-label="Tỷ lệ Long / Short">
+  <div class="ls-vert-separator" aria-hidden="true"></div>
+        <div class="ls-vert-seg short" id="lsShort"><span class="label">57% Short</span></div>
+        <div class="ls-vert-seg long" id="lsLong"><span class="label">Long 43%</span></div>
+      </div>
+      <div class="trade-stats-bar" aria-label="Giá và Khối lượng">
+        <div class="stat-box price-box" aria-live="polite">
+          <div class="stat-label-row">
+            <div class="stat-label">Giá (Điểm)</div>
+            <button type="button" class="auto-pill active" id="autoPriceToggle" aria-pressed="true" aria-label="Bật/Tắt giá tự động">Giá tự động</button>
+          </div>
+          <div class="value-row">
+            <button type="button" class="adj-btn minus" id="priceDec" aria-label="Giảm giá 0.1">−</button>
+            <span class="stat-value" id="pricePoint">--</span>
+            <button type="button" class="adj-btn plus" id="priceInc" aria-label="Tăng giá 0.1">+</button>
+          </div>
+        </div>
+        <div class="stat-box volume-box" aria-live="polite">
+          <div class="stat-label-row">
+            <div class="stat-label">Khối Lượng (Hợp Đồng)</div>
+            <span class="auto-pill placeholder" aria-hidden="true">&nbsp;</span>
+          </div>
+          <div class="value-row">
+            <button type="button" class="adj-btn minus" id="volDec" aria-label="Giảm khối lượng 0.1">−</button>
+            <span class="stat-value" id="volumeContracts">0.1</span>
+            <button type="button" class="adj-btn plus" id="volInc" aria-label="Tăng khối lượng 0.1">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="action-bar" aria-label="Mua / Bán nhanh">
+        <button class="action-btn buy" id="quickBuy" type="button" aria-label="Mua / Long">
+          <span class="shape" aria-hidden="true"></span>
+          <span class="text-wrap">
+            <span class="line label">Mua/Long</span>
+          </span>
+        </button>
+        <button class="action-btn sell" id="quickSell" type="button" aria-label="Bán / Short">
+          <span class="shape" aria-hidden="true"></span>
+          <span class="text-wrap">
+            <span class="line label">Bán/Short</span>
+          </span>
+        </button>
       </div>
     </div>
-
-    <section class="trade-section">
-      <div class="book-and-form">
-        <div class="order-book" aria-label="Order Book">
-          <div class="book-header">
-            <div>Giá</div>
-            <div>Tổng KL*</div>
-          </div>
-          <ul id="asks" class="book-levels asks" aria-label="Asks"></ul>
-          <div class="mid-price" id="midPrice">--</div>
-          <ul id="bids" class="book-levels bids" aria-label="Bids"></ul>
-        </div>
-
-        <form class="order-form" id="orderForm" autocomplete="off">
-          <div class="buy-sell-toggle" role="tablist">
-            <button type="button" data-side="buy" class="side-btn active" id="buyToggle">Mua</button>
-            <button type="button" data-side="sell" class="side-btn" id="sellToggle">Bán</button>
-          </div>
-          <div class="input-group">
-            <label>Loại lệnh</label>
-            <select id="orderType">
-              <option value="limit">Limit</option>
-              <option value="market">Market</option>
-              <option value="stop">Stop</option>
-            </select>
-          </div>
-          <div class="input-group" id="priceGroup">
-            <label>Giá (điểm)</label>
-            <div class="number-input">
-              <button type="button" data-step="-0.1" class="step-btn">−</button>
-              <input id="price" inputmode="decimal" />
-              <button type="button" data-step="0.1" class="step-btn">+</button>
-            </div>
-          </div>
-          <div class="input-group">
-            <label>Khối lượng (HĐ)</label>
-            <div class="number-input">
-              <button type="button" data-step="-0.1" class="step-btn">−</button>
-              <input id="quantity" inputmode="decimal" />
-              <button type="button" data-step="0.1" class="step-btn">+</button>
-            </div>
-            <input type="range" id="quantitySlider" min="0" max="100" value="0" />
-            <div class="scale-percents">
-              <button type="button" class="pct" data-pct="25">25%</button>
-              <button type="button" class="pct" data-pct="50">50%</button>
-              <button type="button" class="pct" data-pct="75">75%</button>
-              <button type="button" class="pct" data-pct="100">100%</button>
-            </div>
-          </div>
-          <div class="calc-line">
-            <span>Khả dụng</span>
-            <span id="availableBalance">500,000,000 VNĐ</span>
-          </div>
-          <div class="calc-line">
-            <span>Margin ước tính</span>
-            <span id="estMargin">-- VNĐ</span>
-          </div>
-          <div class="calc-line">
-            <span>Giá thanh lý</span>
-            <span id="liqPrice">-- VNĐ</span>
-          </div>
-          <button type="submit" class="submit-order" id="submitBtn">Mua/Long</button>
-        </form>
-      </div>
-
-      <div class="positions-panel">
-        <div class="tab-header">
-          <button class="tab-btn active" data-tab="positions">Vị thế (0)</button>
-          <button class="tab-btn" data-tab="orders">Lệnh chờ (0)</button>
-        </div>
-        <div class="tab-content" id="positions" role="tabpanel">
-          <div class="empty">Chưa có vị thế.</div>
-        </div>
-        <div class="tab-content hidden" id="orders" role="tabpanel">
-          <div class="empty">Chưa có lệnh.</div>
-        </div>
-      </div>
-    </section>
   </main>
 
   <nav class="bottom-nav" aria-label="Main">
@@ -154,21 +114,14 @@
       <span>💼</span>
       <small>Tài sản</small>
     </button>
-    <button class="nav-item">
+    <a class="nav-item switch-view" href="index.html" title="Quay về giao diện chuẩn" aria-label="Quay về giao diện chuẩn">
       <span>☰</span>
       <small>Menu</small>
-    </button>
+    </a>
   </nav>
 
-  <template id="levelTmpl">
-    <li class="level">
-      <span class="price"></span>
-      <span class="size"></span>
-      <span class="bar"></span>
-    </li>
-  </template>
-
-  <script src="script.js" defer></script>
+  <!-- Script tối giản v2 -->
+  <script src="script-v2.js" defer></script>
   </div><!-- /.app-phone -->
   </div><!-- /.app-wrapper -->
 </body>

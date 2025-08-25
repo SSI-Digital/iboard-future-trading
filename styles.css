@@ -140,7 +140,7 @@ input#quantitySlider { width:100%; accent-color:var(--green); }
 .empty { color:#555e6b; font-style:italic; }
 
 .bottom-nav { position:absolute; bottom:0; left:0; right:0; height:58px; background:#ffffff; border-top:1px solid var(--border); display:grid; grid-template-columns:repeat(5,1fr); font-size:0.65rem; z-index:50; }
-.nav-item { background:none; border:none; color:var(--text-extra); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:0.7rem; cursor:pointer; }
+.nav-item { background:none; border:none; color:var(--text-extra); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:0.7rem; cursor:pointer; text-decoration:none; }
 .nav-item.active { color:var(--green); font-weight:600; }
 
 @media (max-width:650px) {
