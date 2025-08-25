@@ -112,15 +112,50 @@
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     ctx.beginPath();
+    const linePoints = [];
     // Draw only visible window with constant spacing from right to left
     for(let i=0;i<visible.length;i++){
       const d = visible[visible.length - 1 - i]; // reverse iterate from last backwards
       const x = drawW - i * POINT_SPACING;
       if(x < 0) break; // safety
       const y = mapY(d.p);
+      linePoints.push({x,y});
       if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
     }
     ctx.stroke();
+    // Area fill under line (subtle green gradient) similar to reference
+    if(linePoints.length > 1){
+      ctx.beginPath();
+      const pts = [...linePoints].reverse();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.lineTo(pts[pts.length-1].x, h);
+      ctx.lineTo(pts[0].x, h);
+      ctx.closePath();
+      // Use a lighter version of the actual line color for the fill (blend towards white)
+      function hexToRgb(hex){
+        const m = hex.replace('#','');
+        const full = m.length===3 ? m.split('').map(c=>c+c).join('') : m;
+        const bigint = parseInt(full,16);
+        return {r:(bigint>>16)&255,g:(bigint>>8)&255,b:bigint&255};
+      }
+      function lighten(rgb, factor){ // factor 0..1 (0 = same, 1 = white)
+        return {
+          r: Math.round(rgb.r + (255-rgb.r)*factor),
+          g: Math.round(rgb.g + (255-rgb.g)*factor),
+          b: Math.round(rgb.b + (255-rgb.b)*factor)
+        };
+      }
+      let baseRgb;
+      try { baseRgb = hexToRgb(lineColor); } catch(e){ baseRgb = {r:22,g:163,b:74}; }
+      const lightRgb = lighten(baseRgb, 0.55); // push 55% toward white for a softer tint
+      const gradTopY = Math.min(...pts.map(p=>p.y));
+      const grad = ctx.createLinearGradient(0, gradTopY, 0, h);
+      grad.addColorStop(0, `rgba(${lightRgb.r},${lightRgb.g},${lightRgb.b},0.16)`);
+      grad.addColorStop(1, `rgba(${lightRgb.r},${lightRgb.g},${lightRgb.b},0)`);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    }
     // last point at 95% width (right edge of drawing area)
     const lx = drawW; const ly = mapY(last.p);
   ctx.fillStyle = lineColor;
