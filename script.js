@@ -13,7 +13,8 @@ const state = {
   contractMultiplier: 100000, // 1 điểm * 100,000 VNĐ
   initialMarginRatio: 0.13,  // 13% giả định
   volatilityRange: 2.5,      // Biên dao động tối đa mỗi tick (điểm)
-  tickMs: 650                // Chu kỳ cập nhật (ms)
+  tickMs: 650,               // Chu kỳ cập nhật (ms)
+  longRatio: 50              // Tỷ lệ Long ban đầu (mặc định 50%)
 };
 
 // Elements
@@ -33,6 +34,12 @@ const askList = document.getElementById('asks');
 const bidList = document.getElementById('bids');
 const midPriceEl = document.getElementById('midPrice');
 const levelTmpl = document.getElementById('levelTmpl');
+// Long/Short bar elements
+const longSeg = document.getElementById('longSeg');
+const shortSeg = document.getElementById('shortSeg');
+const longPctEl = document.getElementById('longPct');
+const shortPctEl = document.getElementById('shortPct');
+const lsBar = document.getElementById('lsBar');
 let chartCtx;
 let chartCanvas;
 
@@ -45,6 +52,7 @@ function init() {
   updateCalc();
   setupEvents();
   initChart();
+  // initLongShort bỏ – tỷ lệ sẽ cập nhật sau mỗi lần renderBook
   // vòng lặp mô phỏng giá nhanh hơn
   setInterval(tick, state.tickMs);
 }
@@ -103,10 +111,12 @@ function renderBook() {
   const mid = state.lastPrice;
   // midPrice được cập nhật trong updateTicker()
   const sizes = [];
+  let totalAsk = 0, totalBid = 0;
   for (let i=levels; i>0; i--) {
     const price = (mid + i * 0.1).toFixed(1);
     const size = Math.floor(Math.random()*150)+10; // 10 - 160
     sizes.push(size);
+    totalAsk += size;
     const li = levelTmpl.content.firstElementChild.cloneNode(true);
     li.querySelector('.price').textContent = price;
     li.querySelector('.size').textContent = formatNumber(size);
@@ -116,6 +126,7 @@ function renderBook() {
     const price = (mid - i * 0.1).toFixed(1);
     const size = Math.floor(Math.random()*150)+10;
     sizes.push(size);
+    totalBid += size;
     const li = levelTmpl.content.firstElementChild.cloneNode(true);
     li.querySelector('.price').textContent = price;
     li.querySelector('.size').textContent = formatNumber(size);
@@ -128,6 +139,25 @@ function renderBook() {
     const pct = (size / maxSize)*100;
     li.querySelector('.bar').style.width = pct + '%';
   });
+  applyLongShort(totalBid, totalAsk);
+}
+
+// Long / Short sentiment dựa theo tổng khối lượng bid / ask hiện tại
+function applyLongShort(totalBid, totalAsk){
+  if(!longSeg||!shortSeg) return;
+  const sum = totalBid + totalAsk;
+  if (sum === 0) return;
+  const rawLong = totalBid / sum * 100; // giả định bid thể hiện nhu cầu Long
+  // làm mượt (EMA đơn giản)
+  state.longRatio = state.longRatio * 0.6 + rawLong * 0.4;
+  const longRatio = Math.max(1, Math.min(99, state.longRatio));
+  const shortRatio = 100 - longRatio;
+  // đặt flex basis để không chồng lớp gradient trắng
+  longSeg.style.width = longRatio + '%';
+  shortSeg.style.width = shortRatio + '%';
+  if (lsBar) lsBar.style.setProperty('--longRatio', longRatio.toFixed(2));
+  longPctEl.textContent = 'Long ' + longRatio.toFixed(0) + '%';
+  shortPctEl.textContent = shortRatio.toFixed(0) + '% Short';
 }
 
 function setupEvents() {
@@ -256,15 +286,53 @@ function resizeChart(){
 }
 function updateChart() { chartData.push(state.lastPrice); if (chartData.length>80) chartData.shift(); drawChart(); }
 function drawChart() {
-  const ctx = chartCtx; if (!ctx) return; const w=chartCanvas.clientWidth, h=chartCanvas.clientHeight; // clear full pixel canvas
+  const ctx = chartCtx; if (!ctx) return; const fullW=chartCanvas.clientWidth, fullH=chartCanvas.clientHeight; // clear full pixel canvas
   ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,chartCanvas.width, chartCanvas.height); ctx.restore();
   if (!chartData.length) return;
-  const min = Math.min(...chartData), max=Math.max(...chartData);
-  ctx.lineWidth=1.5; ctx.strokeStyle='var(--green)'; ctx.beginPath();
-  chartData.forEach((p,i)=>{ const x = i/(chartData.length-1)*w; const y = h - (p-min)/(max-min||1)*h; i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  // Determine min/max & padding
+  let min = Math.min(...chartData), max=Math.max(...chartData);
+  if (min===max) { min -= 1; max += 1; }
+  // Expand a little so line not touching top/bottom
+  const rangePad = (max - min) * 0.05;
+  min -= rangePad; max += rangePad;
+  // Move Y-axis scale to the right side (reserve space on the right instead of left)
+  const leftPad = 4; const rightPad = 44; const topPad=4; const bottomPad=4;
+  const plotW = fullW - leftPad - rightPad; const plotH = fullH - topPad - bottomPad;
+
+  // Grid & Y axis labels
+  const ticks = 5;
+  // Draw grid lines first, labels later (after line + fill) to avoid green tint overlay
+  const tickValues = [];
+  ctx.save();
+  ctx.setLineDash([2,3]); // dotted effect
+  ctx.lineWidth = 1;
+  ctx.strokeStyle='rgba(0,0,0,0.04)'; // ultra light
+  for (let i=0;i<ticks;i++) {
+    const tVal = min + (i/(ticks-1))*(max-min);
+    tickValues.push(tVal);
+    const y = topPad + plotH - (tVal - min)/(max-min)*plotH;
+    ctx.beginPath(); ctx.moveTo(leftPad,y); ctx.lineTo(fullW-rightPad,y); ctx.stroke();
+  }
+  ctx.restore(); // reset dash for price line
+  // Price line
+  ctx.lineWidth=1.6; ctx.strokeStyle='rgba(22,163,74,0.75)'; ctx.beginPath();
+  chartData.forEach((p,i)=>{ const x = leftPad + i/(chartData.length-1)*plotW; const y = topPad + plotH - (p-min)/(max-min)*plotH; i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
   ctx.stroke();
-  const grd = ctx.createLinearGradient(0,0,0,h); grd.addColorStop(0,'#16a34a33'); grd.addColorStop(1,'#16a34a00');
-  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); ctx.fillStyle=grd; ctx.fill();
+  // Fill
+  const grd = ctx.createLinearGradient(0,topPad,0,fullH-bottomPad); grd.addColorStop(0,'rgba(22,163,74,0.18)'); grd.addColorStop(1,'rgba(22,163,74,0)');
+  ctx.lineTo(leftPad+plotW, fullH-bottomPad); ctx.lineTo(leftPad, fullH-bottomPad); ctx.closePath(); ctx.fillStyle=grd; ctx.fill();
+
+  // Draw Y-axis labels last so they stay neutral (not tinted by gradient)
+  ctx.font = '10px system-ui, sans-serif';
+  ctx.textAlign='left';
+  ctx.textBaseline='middle';
+  // Resolve CSS custom property to a real color because canvas doesn't parse var()
+  const axisColor = getComputedStyle(document.body).getPropertyValue('--text-extra').trim() || '#9aa4b1';
+  ctx.fillStyle = axisColor;
+  tickValues.forEach(tVal=>{
+    const y = topPad + plotH - (tVal - min)/(max-min)*plotH;
+    ctx.fillText(tVal.toFixed(1), fullW - rightPad + 4, y);
+  });
 }
 
 // Utility: debounce

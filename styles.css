@@ -1,6 +1,6 @@
 /* Mobile Futures Trading UI */
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html,body { margin:0; padding:0; font-family: system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif; background:linear-gradient(135deg,#e7eef5,#f5f7fa 40%,#e9eef3); color:#1d232e; }
+html,body { margin:0; padding:0; font-family: system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif; background:#ffffff; color:#1d232e; }
 body { min-height:100vh; display:flex; justify-content:center; align-items:flex-start; padding:24px 20px; overflow:auto; }
 /* Light theme (default) */
 :root {
@@ -9,9 +9,9 @@ body { min-height:100vh; display:flex; justify-content:center; align-items:flex-
   --red:#dc2626;
   --red-glow:#dc262622;
   --yellow:#d97706;
-  --bg:#f5f7fa;
-  --bg-alt:#ffffff;
-  --bg-soft:#eef2f6;
+  --bg:#ffffff;        /* primary background now pure white */
+  --bg-alt:#ffffff;    /* secondary surfaces also white */
+  --bg-soft:#ffffff;   /* soft/background elements unified to white */
   --border:#d9e1ea;
   --border-strong:#c5cfd9;
   --text:#1d232e;
@@ -64,12 +64,27 @@ body.theme-dark {
 .tf { background:#1b1f27; color:#b1b7c4; border:none; padding:4px 10px; border-radius:20px; font-size:0.75rem; cursor:pointer; white-space:nowrap; }
 .tf.active { background:var(--green); color:#fff; }
 
-.chart-placeholder { position:relative; background:transparent; border:none; border-radius:var(--radius); padding:4px 4px 34px; min-height:150px; }
+.chart-placeholder { position:relative; background:transparent; border:none; border-radius:var(--radius); padding:4px 8px 32px; min-height:150px; }
 .chart-placeholder canvas { width:100%; height:150px; display:block; }
-.price-ticker { position:absolute; bottom:4px; left:8px; right:8px; display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-dim); }
+.price-ticker { position:absolute; bottom:4px; left:8px; right:8px; justify-content:space-between; font-size:0.7rem; color:var(--text-dim); }
 /* removed last-price (giá hiển thị trên chart) theo yêu cầu */
 .ticker-stats { display:flex; gap:10px; align-items:flex-end; }
 .ticker-stats span { white-space:nowrap; }
+
+/* Long / Short ratio bar */
+.long-short-wrapper { padding:6px 10px 0; }
+.ls-bar { position:relative; width:100%; display:flex; border-radius:26px; overflow:hidden; font-size:0.7rem; font-weight:500; user-select:none; --longRatio:50; }
+.ls-seg { position:relative; display:flex; align-items:center; white-space:nowrap; padding:6px 14px; line-height:1; transition:width .45s ease; z-index:1; }
+.ls-seg.long { background:rgba(22,167,120,0.12); color:#1a6f55; justify-content:flex-start; text-align:left; }
+.ls-seg.short { background:rgba(234,73,80,0.12); color:#a03434; justify-content:flex-end; text-align:right; }
+.ls-bar .long { border-top-left-radius:26px; border-bottom-left-radius:26px; }
+.ls-bar .short { border-top-right-radius:26px; border-bottom-right-radius:26px; }
+/* central white separator band (solid white, no tint bleed) */
+/* central white gap with two diagonal edges */
+/* narrower, steeper, reversed diagonals */
+/* central white gap: parallelogram with both diagonals same direction (down-left), steeper & narrower */
+.ls-bar::before { content:''; position:absolute; top:0; bottom:0; left:calc(var(--longRatio)*1% - 4px); width:8px; background:#ffffff; pointer-events:none; z-index:2; box-shadow:0 0 0 1px rgba(0,0,0,0.02),0 0 2px rgba(0,0,0,0.05); clip-path:polygon(25% 0,100% 0,75% 100%,0 100%); }
+.ls-seg span { position:relative; z-index:3; }
 
 .trade-section { flex:1; display:flex; flex-direction:column; padding:4px 10px 80px; gap:14px; }
 .book-and-form { display:flex; gap:0; background:var(--bg-alt); border-radius:var(--radius); padding:6px 6px 8px; }
