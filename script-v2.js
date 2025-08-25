@@ -29,11 +29,21 @@
   function simulate(){
     const vol = 0.7;
     const rnd = (Math.random()-0.5)*vol;
-  lastPrice = +(lastPrice + rnd).toFixed(2);
+    const prevPrice = lastPrice;
+    lastPrice = +(lastPrice + rnd).toFixed(2);
     pushPrice(lastPrice);
   // randomly drift long/short ratio (mock)
   updateLongShort();
     drawChart();
+    // trigger floating price flash based on direction
+    const floatingEl = document.getElementById('v2Floating');
+    if(floatingEl && lastPrice !== prevPrice){
+      floatingEl.classList.remove('flash-up','flash-down');
+      // force reflow to restart animation
+      void floatingEl.offsetWidth;
+      if(lastPrice > prevPrice) floatingEl.classList.add('flash-up');
+      else if(lastPrice < prevPrice) floatingEl.classList.add('flash-down');
+    }
   }
 
   function drawChart(){
@@ -60,8 +70,9 @@
     const BOTTOM_MARGIN = 0.10; // 10% from bottom for lowest
     const spanFrac = 1 - TOP_MARGIN - BOTTOM_MARGIN; // usable drawing span (0.80)
     // Desired zone for current (last) price (fractions from top)
-    const CURR_ZONE_TOP = 0.20;   // must not go above (closer than) 20% from top
-    const CURR_ZONE_BOTTOM = 0.60; // must not go below (further than) 60% from top (i.e. 40% from bottom)
+    const CURR_ZONE_TOP = 0.22;   // must not go above (closer than) 22% from top
+  // Adjusted lower zone so last price can drift further down (was 0.60)
+  const CURR_ZONE_BOTTOM = 0.75; // must not go below ~75% from top (~2% from bottom)
     // Start with raw min/max
     let minAdj = rawMin;
     let maxAdj = rawMax;
@@ -127,7 +138,9 @@
     ctx.stroke();
     ctx.restore();
   const formatted = last.p.toFixed(1);
-  floating.textContent = formatted;
+  const valueSpan = floating.querySelector('.fp-value');
+  if(valueSpan) valueSpan.textContent = formatted;
+  floating.setAttribute('aria-label','Giá hiện tại ' + formatted);
     // update stats boxes
     const priceEl = document.getElementById('pricePoint');
   if(priceEl && autoPriceActive){ priceEl.textContent = formatted; }
