@@ -5,6 +5,8 @@
   const floating = document.getElementById('v2Floating');
   if(!chartCanvas) return;
   let lastPrice = 1805.0;
+  // mock entry price for P/L percent (could later be dynamic)
+  let entryPrice = lastPrice - 10; // sample entry below current so P/L starts positive
   let dpr = window.devicePixelRatio || 1;
   const data = [];
   const MAX_POINTS = 400;
@@ -15,6 +17,7 @@
     const rect = chartCanvas.getBoundingClientRect();
     chartCanvas.width = rect.width * dpr;
     chartCanvas.height = rect.height * dpr;
+  positionLongShortBar();
     drawChart();
   }
 
@@ -26,8 +29,10 @@
   function simulate(){
     const vol = 0.7;
     const rnd = (Math.random()-0.5)*vol;
-    lastPrice = +(lastPrice + rnd).toFixed(2);
+  lastPrice = +(lastPrice + rnd).toFixed(2);
     pushPrice(lastPrice);
+  // randomly drift long/short ratio (mock)
+  updateLongShort();
     drawChart();
   }
 
@@ -40,7 +45,7 @@
   const lineColor = (getComputedStyle(document.documentElement).getPropertyValue('--chart-accent')||'#6F6ADE').trim();
     const prices = data.map(d=>d.p);
   // Sliding window logic: keep constant horizontal spacing; only render points that fit current width
-  const rightMarginRatio = 0.05; // keep
+  const rightMarginRatio = 0.05; // revert to 5% right margin
   const drawW = w * (1 - rightMarginRatio);
   const POINT_SPACING = 6 * dpr; // px between points
   const maxVisible = Math.max(2, Math.floor(drawW / POINT_SPACING) + 2);
@@ -126,6 +131,38 @@
     // update stats boxes
     const priceEl = document.getElementById('pricePoint');
   if(priceEl && autoPriceActive){ priceEl.textContent = formatted; }
+    // instrument change mock (previous close = first visible price for simplicity)
+    const instChangeEl = document.getElementById('instrumentChange');
+    if(instChangeEl){
+      const prev = prices[0];
+      const abs = +(last.p - prev).toFixed(1);
+      const pct = prev !== 0 ? ((last.p - prev)/prev*100) : 0;
+      const sign = abs>0?'+':(abs<0?'-':'');
+      instChangeEl.textContent = `${sign}${Math.abs(abs).toFixed(1)} (${sign}${Math.abs(pct).toFixed(2)}%)`;
+      instChangeEl.classList.toggle('positive', abs>0);
+      instChangeEl.classList.toggle('negative', abs<0);
+    }
+    // Update High/Low/Volume (mock volume increments per tick)
+    const highEl = document.getElementById('instHigh');
+    const lowEl = document.getElementById('instLow');
+    const volEl = document.getElementById('instVol');
+    if(highEl) highEl.textContent = Math.max(...prices).toFixed(1);
+    if(lowEl) lowEl.textContent = Math.min(...prices).toFixed(1);
+    if(volEl){
+      // simple mock: volume = number of points * random tiny factor seeded once
+      if(!window.__mockVolSeed){ window.__mockVolSeed = 7 + Math.random()*5; }
+      const vol = Math.round(prices.length * window.__mockVolSeed);
+      volEl.textContent = vol.toLocaleString('vi-VN');
+    }
+    // Update profit percent mock (based on entryPrice)
+    const profitEl = document.getElementById('profitPercent');
+    if(profitEl){
+      const pct = ((lastPrice - entryPrice)/entryPrice)*100;
+      const sign = pct>0?'+':(pct<0?'-':'');
+      profitEl.textContent = `${sign}${Math.abs(pct).toFixed(2)}%`;
+      profitEl.classList.toggle('positive', pct>0);
+      profitEl.classList.toggle('negative', pct<0);
+    }
     // move floating label vertically to follow price line (keep left side)
     // convert canvas Y (device pixels) to CSS px
   const cssY = ly / dpr;
@@ -203,4 +240,57 @@
   resizeChart();
   drawChart();
   setInterval(simulate, 1000);
+  // --- Long / Short vertical ratio mock logic ---
+  let longRatio = 0.43; // initial 43%
+  function updateLongShort(){
+    // small random walk
+    longRatio += (Math.random()-0.5)*0.04; // +/-2%
+    if(longRatio < 0.05) longRatio = 0.05;
+    if(longRatio > 0.95) longRatio = 0.95;
+    const shortRatio = 1 - longRatio;
+    const longEl = document.getElementById('lsLong');
+    const shortEl = document.getElementById('lsShort');
+    const sep = document.querySelector('.long-short-vertical .ls-vert-separator');
+    if(longEl && shortEl){
+      // use percentage heights (container is positioned absolutely)
+      longEl.style.height = (longRatio*100).toFixed(2)+'%';
+      shortEl.style.height = (shortRatio*100).toFixed(2)+'%';
+      longEl.querySelector('.label').textContent = 'Long ' + Math.round(longRatio*100) + '%';
+      shortEl.querySelector('.label').textContent = Math.round(shortRatio*100) + '% Short';
+      if(sep){
+        sep.style.top = (shortRatio*100).toFixed(2)+'%'; // separator sits between short (top) and long (bottom)
+      }
+    }
+  }
+  updateLongShort();
+  function positionLongShortBar(){
+    const bar = document.querySelector('.long-short-vertical');
+    const overlayCenter = document.querySelector('.chart-overlay .overlay-center');
+    const statsBar = document.querySelector('.trade-stats-bar');
+    if(!bar || !overlayCenter || !statsBar) return;
+    const parentRect = chartCanvas.parentElement.getBoundingClientRect();
+    const centerRect = overlayCenter.getBoundingClientRect();
+    const statsRect = statsBar.getBoundingClientRect();
+    // compute relative positions (tighter gaps)
+    let top = centerRect.bottom - parentRect.top + 2; // reduced gap
+    const bottomLimit = statsRect.top - parentRect.top - 2; // reduced gap
+  // original full available height between center box and stats bar
+  const fullHeight = bottomLimit - top;
+  // target scale (reduce to ~80% of previous height)
+  const scale = 0.8;
+  let height = fullHeight * scale;
+  // center the shorter bar within the original gap
+  top += (fullHeight - height)/2;
+  const minHeight = 36; // slightly smaller
+    if(height < minHeight){
+      // if space too small, anchor above stats bar and extend upward
+      height = minHeight;
+      top = bottomLimit - height; // may overlap; acceptable in extreme small layouts
+    }
+    bar.style.top = top + 'px';
+    bar.style.height = height + 'px';
+  }
+  // initial positioning after layout
+  window.addEventListener('load',()=>{ setTimeout(positionLongShortBar,50); });
+  window.addEventListener('resize',()=>{ setTimeout(positionLongShortBar,30); });
 })();

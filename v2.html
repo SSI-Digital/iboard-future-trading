@@ -25,22 +25,37 @@
     <div class="fullchart-wrapper">
       <div class="chart-overlay" aria-label="Thông tin tài khoản và vị thế">
         <div class="overlay-row">
-          <div class="cell cell-left">
-            <div class="primary balance" id="balanceValue">432,987 VNĐ</div>
-            <div class="sub">Số dư khả dụng</div>
-          </div>
-          <div class="cell cell-right">
-            <div class="primary profit positive" id="profitPercent">+12.34%</div>
-            <div class="sub">1 vị thế</div>
+          <div class="cell cell-unified">
+            <div class="seg balance-seg">
+              <div class="primary balance" id="balanceValue">432,987 VNĐ</div>
+              <div class="sub">TK: AB123456789</div>
+            </div>
+            <div class="seg position-seg">
+              <div class="primary profit" id="profitPercent">0.00%</div>
+              <div class="sub">1 vị thế</div>
+            </div>
           </div>
         </div>
         <div class="overlay-center" aria-label="Mã phái sinh và biến động">
           <div class="instrument" id="instrumentCode">VN30F2509</div>
-          <div class="instrument-change positive" id="instrumentChange">+5.6 (+0.31%)</div>
+          <div class="instrument-change" id="instrumentChange">0.0 (0.00%)</div>
+          <div class="instrument-stats" aria-label="Cao Thấp và Khối lượng">
+            <span class="stat-item"><span class="label">Cao</span> <span id="instHigh">--</span></span>
+            <span class="divider">|</span>
+            <span class="stat-item"><span class="label">Thấp</span> <span id="instLow">--</span></span>
+            <span class="divider">|</span>
+            <span class="stat-item"><span class="label">KL</span> <span id="instVol">--</span></span>
+          </div>
         </div>
       </div>
       <canvas id="v2Chart" aria-label="Biểu đồ giá toàn màn hình"></canvas>
       <div class="floating-price" id="v2Floating">--</div>
+      <!-- Vertical Long / Short ratio bar (positioned via CSS/JS) -->
+      <div class="long-short-vertical" aria-label="Tỷ lệ Long / Short">
+  <div class="ls-vert-separator" aria-hidden="true"></div>
+        <div class="ls-vert-seg short" id="lsShort"><span class="label">57% Short</span></div>
+        <div class="ls-vert-seg long" id="lsLong"><span class="label">Long 43%</span></div>
+      </div>
       <div class="trade-stats-bar" aria-label="Giá và Khối lượng">
         <div class="stat-box price-box" aria-live="polite">
           <div class="stat-label-row">
