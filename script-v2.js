@@ -39,9 +39,17 @@
   if(data.length<2) return;
   const lineColor = (getComputedStyle(document.documentElement).getPropertyValue('--chart-accent')||'#6F6ADE').trim();
     const prices = data.map(d=>d.p);
-    let rawMin = Math.min(...prices);
-    let rawMax = Math.max(...prices);
-    const last = data[data.length-1];
+  // Sliding window logic: keep constant horizontal spacing; only render points that fit current width
+  const rightMarginRatio = 0.05; // keep
+  const drawW = w * (1 - rightMarginRatio);
+  const POINT_SPACING = 6 * dpr; // px between points
+  const maxVisible = Math.max(2, Math.floor(drawW / POINT_SPACING) + 2);
+  const visibleStartIndex = Math.max(0, data.length - maxVisible);
+  const visible = data.slice(visibleStartIndex);
+  const last = visible[visible.length - 1];
+  const pricesVisible = visible.map(d=>d.p);
+  let rawMin = Math.min(...pricesVisible);
+  let rawMax = Math.max(...pricesVisible);
     // Base chart vertical margins for extremes
     const TOP_MARGIN = 0.10;   // 10% from top for highest
     const BOTTOM_MARGIN = 0.10; // 10% from bottom for lowest
@@ -81,9 +89,6 @@
       const fracFromTop = TOP_MARGIN + spanFrac * (1 - alpha);
       return fracFromTop * h;
     }
-    // horizontal: reserve 5% right margin
-    const rightMarginRatio = 0.05;
-    const drawW = w * (1 - rightMarginRatio);
   // grid removed
     ctx.lineWidth = 2*dpr;
   // line color same as symbol text ("Phái sinh")
@@ -91,14 +96,17 @@
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     ctx.beginPath();
-    data.forEach((d,i)=>{
-      const x = (i/(data.length-1))*drawW;
-    const y = mapY(d.p);
+    // Draw only visible window with constant spacing from right to left
+    for(let i=0;i<visible.length;i++){
+      const d = visible[visible.length - 1 - i]; // reverse iterate from last backwards
+      const x = drawW - i * POINT_SPACING;
+      if(x < 0) break; // safety
+      const y = mapY(d.p);
       if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    });
+    }
     ctx.stroke();
-    // last point at 95% width
-  const lx = drawW; const ly = mapY(last.p);
+    // last point at 95% width (right edge of drawing area)
+    const lx = drawW; const ly = mapY(last.p);
   ctx.fillStyle = lineColor;
     ctx.beginPath();
     ctx.arc(lx,ly,4*dpr,0,Math.PI*2);
