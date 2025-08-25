@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Giao dịch Phái sinh</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="force-desktop">
+  <div class="app-wrapper">
+  <div class="app-phone" role="application" aria-label="Giao diện giao dịch">
+  <div class="device-notch"></div>
+  <header class="app-bar">
+    <div class="symbol-group">
+      <button class="icon-btn" id="backBtn" aria-label="Back">⟵</button>
+      <div class="symbol-info">
+        <div class="symbol-line">
+          <span class="symbol" id="symbolName">Phái sinh</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="screen" tabindex="0">
+    <div class="fullchart-wrapper">
+      <canvas id="v2Chart" aria-label="Biểu đồ giá toàn màn hình"></canvas>
+      <div class="floating-price" id="v2Floating">--</div>
+    </div>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Main">
+    <button class="nav-item">
+      <span>🏠</span>
+      <small>Trang chủ</small>
+    </button>
+    <button class="nav-item">
+      <span>📈</span>
+      <small>Thị trường</small>
+    </button>
+    <button class="nav-item active">
+      <span>⚡</span>
+      <small>Giao dịch</small>
+    </button>
+    <button class="nav-item">
+      <span>💼</span>
+      <small>Tài sản</small>
+    </button>
+    <button class="nav-item">
+      <span>☰</span>
+      <small>Menu</small>
+    </button>
+  </nav>
+
+  <!-- Script tối giản v2 -->
+  <script src="script-v2.js" defer></script>
+  </div><!-- /.app-phone -->
+  </div><!-- /.app-wrapper -->
+</body>
+</html>

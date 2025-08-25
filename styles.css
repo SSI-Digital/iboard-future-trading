@@ -9,6 +9,7 @@ body { min-height:100vh; display:flex; justify-content:center; align-items:flex-
   --red:#dc2626;
   --red-glow:#dc262622;
   --yellow:#d97706;
+  --chart-accent:#6F6ADE; /* per requested purple line color */
   --bg:#ffffff;        /* primary background now pure white */
   --bg-alt:#ffffff;    /* secondary surfaces also white */
   --bg-soft:#ffffff;   /* soft/background elements unified to white */
@@ -165,3 +166,8 @@ body.force-desktop .book-and-form { flex-direction:row !important; }
 body.force-desktop .order-book { min-width:46% !important; }
 body.force-desktop .order-form { min-width:54% !important; }
 body.force-desktop .bottom-nav { height:58px !important; }
+
+/* V2 full screen chart */
+.fullchart-wrapper { position:relative; flex:1; width:100%; height:100%; display:flex; }
+.fullchart-wrapper canvas { flex:1; width:100%; height:100%; display:block; }
+.floating-price { position:absolute; top:8px; left:12px; background:rgba(255,255,255,0.9); padding:4px 8px; border-radius:8px; font-size:0.75rem; font-weight:600; box-shadow:0 2px 4px rgba(0,0,0,0.06); }
