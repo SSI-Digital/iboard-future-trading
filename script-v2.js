@@ -39,21 +39,47 @@
   if(data.length<2) return;
   const lineColor = (getComputedStyle(document.documentElement).getPropertyValue('--chart-accent')||'#6F6ADE').trim();
     const prices = data.map(d=>d.p);
-    const dataMin = Math.min(...prices);
-    const dataMax = Math.max(...prices);
+    let rawMin = Math.min(...prices);
+    let rawMax = Math.max(...prices);
     const last = data[data.length-1];
-    const range = (dataMax - dataMin);
-    // Fixed vertical band (fractions of total height)
-  const BAND_TOP = 0.15;      // 15% from top
-  const BAND_BOTTOM = 0.85;   // 85% from top
-    const bandTopPx = BAND_TOP * h;
-    const bandBottomPx = BAND_BOTTOM * h;
-    const bandHeightPx = bandBottomPx - bandTopPx; // positive
-    // Mapping function: max price -> bandTopPx, min price -> bandBottomPx
+    // Base chart vertical margins for extremes
+    const TOP_MARGIN = 0.10;   // 10% from top for highest
+    const BOTTOM_MARGIN = 0.10; // 10% from bottom for lowest
+    const spanFrac = 1 - TOP_MARGIN - BOTTOM_MARGIN; // usable drawing span (0.80)
+    // Desired zone for current (last) price (fractions from top)
+    const CURR_ZONE_TOP = 0.20;   // must not go above (closer than) 20% from top
+    const CURR_ZONE_BOTTOM = 0.60; // must not go below (further than) 60% from top (i.e. 40% from bottom)
+    // Start with raw min/max
+    let minAdj = rawMin;
+    let maxAdj = rawMax;
+    let rangeAdj = maxAdj - minAdj || 1; // avoid zero
+    // Helper to compute y fraction (0 at top, 1 at bottom) for a price with current min/max mapping
+    function yFrac(p){
+      const alpha = (p - minAdj)/rangeAdj; // 0..1
+      // y from top = TOP_MARGIN + span*(1-alpha)
+      return TOP_MARGIN + spanFrac * (1 - alpha);
+    }
+    // Adjust top (extend max) if last price too high (y above zone: smaller fraction)
+    let lastYFrac = yFrac(last.p);
+    if(lastYFrac < CURR_ZONE_TOP){
+      // solve for new maxAdj keeping minAdj: alphaTarget = (TOP + span - yTarget)/span
+      const alphaTarget = (TOP_MARGIN + spanFrac - CURR_ZONE_TOP)/spanFrac; // desired alpha of last price
+      // alphaTarget = (last - minAdj)/(maxAdj' - minAdj) => maxAdj' = minAdj + (last - minAdj)/alphaTarget
+      maxAdj = minAdj + (last.p - minAdj)/alphaTarget;
+      rangeAdj = maxAdj - minAdj;
+    } else if(lastYFrac > CURR_ZONE_BOTTOM){
+      // last too low (near bottom) -> extend min downward keeping max
+      const alphaTarget = (TOP_MARGIN + spanFrac - CURR_ZONE_BOTTOM)/spanFrac;
+      // alphaTarget = (last - minAdj')/(maxAdj - minAdj') => minAdj' = (last - alphaTarget*maxAdj)/(1 - alphaTarget)
+      minAdj = (last.p - alphaTarget*maxAdj)/(1 - alphaTarget);
+      rangeAdj = maxAdj - minAdj;
+    }
+    // Mapping function after adjustments
     function mapY(p){
-      if(range === 0) return bandTopPx + bandHeightPx/2;
-      const norm = (p - dataMin)/range; // 0 at min, 1 at max
-      return bandBottomPx - norm * bandHeightPx;
+      if(rangeAdj === 0) return (TOP_MARGIN + spanFrac/2)*h;
+      const alpha = (p - minAdj)/rangeAdj; // 0 at min, 1 at max
+      const fracFromTop = TOP_MARGIN + spanFrac * (1 - alpha);
+      return fracFromTop * h;
     }
     // horizontal: reserve 5% right margin
     const rightMarginRatio = 0.05;
