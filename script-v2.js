@@ -40,30 +40,22 @@
     const dataMin = Math.min(...prices);
     const dataMax = Math.max(...prices);
     const last = data[data.length-1];
-    const rawRange = (dataMax - dataMin) || 1;
-    // Natural normalized position (0 bottom -> 1 top in price terms reversed later)
-    let naturalYNorm = 1 - ((last.p - dataMin)/rawRange); // 0 top, 1 bottom visually? actually we'll convert later
-    // Desired y fraction (0 top,1 bottom) clamped to 0.30-0.70 band
-    const minBand = 0.30, maxBand = 0.70;
-    let yDesired = Math.min(Math.max(naturalYNorm, minBand), maxBand);
-    // Fractions above/below last price in display range
-    const fracBelow = yDesired;        // portion of range below last price (visual lower space)
-    const fracAbove = 1 - yDesired;    // portion above
-    // Distances needed to include extremes
-    const distAbove = dataMax - last.p; // price units
-    const distBelow = last.p - dataMin;
-    // Required range to fit extremes within allocated fractions
-    let displayRange = Math.max(
-      distAbove / (fracAbove || 0.0001),
-      distBelow / (fracBelow || 0.0001),
-      0.5 // minimal range to avoid flat line
-    );
-    let displayMin = last.p - displayRange * fracBelow;
-    let displayMax = last.p + displayRange * fracAbove;
-    const range = displayRange || 1;
-  // horizontal: reserve 5% right margin
-  const rightMarginRatio = 0.05;
-  const drawW = w * (1 - rightMarginRatio);
+    const range = (dataMax - dataMin);
+    // Fixed vertical band (fractions of total height)
+  const BAND_TOP = 0.15;      // 15% from top
+  const BAND_BOTTOM = 0.85;   // 85% from top
+    const bandTopPx = BAND_TOP * h;
+    const bandBottomPx = BAND_BOTTOM * h;
+    const bandHeightPx = bandBottomPx - bandTopPx; // positive
+    // Mapping function: max price -> bandTopPx, min price -> bandBottomPx
+    function mapY(p){
+      if(range === 0) return bandTopPx + bandHeightPx/2;
+      const norm = (p - dataMin)/range; // 0 at min, 1 at max
+      return bandBottomPx - norm * bandHeightPx;
+    }
+    // horizontal: reserve 5% right margin
+    const rightMarginRatio = 0.05;
+    const drawW = w * (1 - rightMarginRatio);
   // grid removed
     ctx.lineWidth = 2*dpr;
   // line color same as symbol text ("Phái sinh")
@@ -73,12 +65,12 @@
     ctx.beginPath();
     data.forEach((d,i)=>{
       const x = (i/(data.length-1))*drawW;
-      const y = h - ((d.p-displayMin)/range)*h;
+    const y = mapY(d.p);
       if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
     });
     ctx.stroke();
     // last point at 95% width
-  const lx = drawW; const ly = h - ((last.p-displayMin)/range)*h;
+  const lx = drawW; const ly = mapY(last.p);
   ctx.fillStyle = lineColor;
     ctx.beginPath();
     ctx.arc(lx,ly,4*dpr,0,Math.PI*2);
@@ -96,7 +88,7 @@
     floating.textContent = last.p.toFixed(2);
     // move floating label vertically to follow price line (keep left side)
     // convert canvas Y (device pixels) to CSS px
-    const cssY = ly / dpr;
+  const cssY = ly / dpr;
     if(floating){
       const fh = floating.offsetHeight || 16;
       floating.style.top = (cssY - fh/2) + 'px';
