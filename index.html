@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Giao dịch Phái sinh</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-wrapper">
+  <div class="app-phone" role="application" aria-label="Giao diện giao dịch">
+  <div class="device-notch"></div>
+  <header class="app-bar">
+    <div class="symbol-group">
+      <button class="icon-btn" id="backBtn" aria-label="Back">⟵</button>
+      <div class="symbol-info">
+        <div class="symbol-line">
+          <span class="symbol" id="symbolName">VN30F2509</span>
+          <span class="badge down" id="symbolChange">-3.19%</span>
+        </div>
+      </div>
+    </div>
+    <div class="app-actions">
+      <button class="icon-btn" title="Search">🔍</button>
+      <button class="icon-btn" title="Alerts">⏰</button>
+      <button class="icon-btn" id="themeToggle" title="Đổi theme" aria-label="Toggle Theme">🌙</button>
+      <button class="icon-btn" title="More">⋮</button>
+    </div>
+  </header>
+
+  <main class="screen" tabindex="0">
+    <section class="chart-section">
+      <div class="timeframes" role="tablist">
+        <button class="tf active">Line</button>
+        <button class="tf">1m</button>
+        <button class="tf">5m</button>
+        <button class="tf">15m</button>
+        <button class="tf">30m</button>
+        <button class="tf">60m</button>
+        <button class="tf">2h</button>
+        <button class="tf">4h</button>
+        <button class="tf">8h</button>
+      </div>
+      <div class="chart-placeholder" id="chart">
+  <canvas id="miniChart" aria-label="Biểu đồ giá"></canvas>
+        <div class="price-ticker">
+          <div class="ticker-stats" style="margin-left:auto;">
+            <span>Cao: <b id="highPrice">--</b></span>
+            <span>Thấp: <b id="lowPrice">--</b></span>
+            <span>KL: <b id="vol24h">--</b></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="trade-section">
+      <div class="book-and-form">
+        <div class="order-book" aria-label="Order Book">
+          <div class="book-header">
+            <div>Giá</div>
+            <div>Tổng KL*</div>
+          </div>
+          <ul id="asks" class="book-levels asks" aria-label="Asks"></ul>
+          <div class="mid-price" id="midPrice">--</div>
+          <ul id="bids" class="book-levels bids" aria-label="Bids"></ul>
+        </div>
+
+        <form class="order-form" id="orderForm" autocomplete="off">
+          <div class="buy-sell-toggle" role="tablist">
+            <button type="button" data-side="buy" class="side-btn active" id="buyToggle">Mua</button>
+            <button type="button" data-side="sell" class="side-btn" id="sellToggle">Bán</button>
+          </div>
+          <div class="input-group">
+            <label>Loại lệnh</label>
+            <select id="orderType">
+              <option value="limit">Limit</option>
+              <option value="market">Market</option>
+              <option value="stop">Stop</option>
+            </select>
+          </div>
+          <div class="input-group" id="priceGroup">
+            <label>Giá (điểm)</label>
+            <div class="number-input">
+              <button type="button" data-step="-0.1" class="step-btn">−</button>
+              <input id="price" inputmode="decimal" />
+              <button type="button" data-step="0.1" class="step-btn">+</button>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Khối lượng (HĐ)</label>
+            <div class="number-input">
+              <button type="button" data-step="-0.1" class="step-btn">−</button>
+              <input id="quantity" inputmode="decimal" />
+              <button type="button" data-step="0.1" class="step-btn">+</button>
+            </div>
+            <input type="range" id="quantitySlider" min="0" max="100" value="0" />
+            <div class="scale-percents">
+              <button type="button" class="pct" data-pct="25">25%</button>
+              <button type="button" class="pct" data-pct="50">50%</button>
+              <button type="button" class="pct" data-pct="75">75%</button>
+              <button type="button" class="pct" data-pct="100">100%</button>
+            </div>
+          </div>
+          <div class="calc-line">
+            <span>Khả dụng</span>
+            <span id="availableBalance">500,000,000 VNĐ</span>
+          </div>
+          <div class="calc-line">
+            <span>Margin ước tính</span>
+            <span id="estMargin">-- VNĐ</span>
+          </div>
+          <div class="calc-line">
+            <span>Giá thanh lý</span>
+            <span id="liqPrice">-- VNĐ</span>
+          </div>
+          <button type="submit" class="submit-order" id="submitBtn">Mua/Long</button>
+        </form>
+      </div>
+
+      <div class="positions-panel">
+        <div class="tab-header">
+          <button class="tab-btn active" data-tab="positions">Vị thế (0)</button>
+          <button class="tab-btn" data-tab="orders">Lệnh chờ (0)</button>
+        </div>
+        <div class="tab-content" id="positions" role="tabpanel">
+          <div class="empty">Chưa có vị thế.</div>
+        </div>
+        <div class="tab-content hidden" id="orders" role="tabpanel">
+          <div class="empty">Chưa có lệnh.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Main">
+    <button class="nav-item">
+      <span>🏠</span>
+      <small>Trang chủ</small>
+    </button>
+    <button class="nav-item">
+      <span>📈</span>
+      <small>Thị trường</small>
+    </button>
+    <button class="nav-item active">
+      <span>⚡</span>
+      <small>Giao dịch</small>
+    </button>
+    <button class="nav-item">
+      <span>💼</span>
+      <small>Tài sản</small>
+    </button>
+    <button class="nav-item">
+      <span>☰</span>
+      <small>Menu</small>
+    </button>
+  </nav>
+
+  <template id="levelTmpl">
+    <li class="level">
+      <span class="price"></span>
+      <span class="size"></span>
+      <span class="bar"></span>
+    </li>
+  </template>
+
+  <script src="script.js" defer></script>
+  </div><!-- /.app-phone -->
+  </div><!-- /.app-wrapper -->
+</body>
+</html>
