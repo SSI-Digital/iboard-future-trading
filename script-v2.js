@@ -8,6 +8,8 @@
   let dpr = window.devicePixelRatio || 1;
   const data = [];
   const MAX_POINTS = 400;
+  // auto price toggle state (declare early so drawChart can read it)
+  let autoPriceActive = true;
 
   function resizeChart(){
     const rect = chartCanvas.getBoundingClientRect();
@@ -85,7 +87,11 @@
     ctx.lineTo(w,ly);
     ctx.stroke();
     ctx.restore();
-    floating.textContent = last.p.toFixed(2);
+  const formatted = last.p.toFixed(1);
+  floating.textContent = formatted;
+    // update stats boxes
+    const priceEl = document.getElementById('pricePoint');
+  if(priceEl && autoPriceActive){ priceEl.textContent = formatted; }
     // move floating label vertically to follow price line (keep left side)
     // convert canvas Y (device pixels) to CSS px
   const cssY = ly / dpr;
@@ -112,6 +118,54 @@
       pushPrice(lastPrice);
     }
   })();
+  // quick action buttons (placeholder handlers)
+  const btnBuy = document.getElementById('quickBuy');
+  const btnSell = document.getElementById('quickSell');
+  if(btnBuy){ btnBuy.addEventListener('click',()=>{ console.log('Quick BUY'); btnBuy.classList.add('flash'); setTimeout(()=>btnBuy.classList.remove('flash'),400); }); }
+  if(btnSell){ btnSell.addEventListener('click',()=>{ console.log('Quick SELL'); btnSell.classList.add('flash'); setTimeout(()=>btnSell.classList.remove('flash'),400); }); }
+
+  // Price auto / manual control
+  const autoToggle = document.getElementById('autoPriceToggle');
+  const pricePointEl = document.getElementById('pricePoint');
+  const decBtn = document.getElementById('priceDec');
+  const incBtn = document.getElementById('priceInc');
+  // volume controls (currently disabled / static per spec, but hook prepared)
+  const volDecBtn = document.getElementById('volDec');
+  const volIncBtn = document.getElementById('volInc');
+  const volValueEl = document.getElementById('volumeContracts');
+  function adjustVolume(delta){
+    if(!volValueEl) return;
+    let v = parseFloat(volValueEl.textContent.replace(/[^0-9.\-]/g,''));
+    if(isNaN(v)) v = 0.1;
+    v = +(v + delta).toFixed(1);
+    if(v < 0.1) v = 0.1;
+    volValueEl.textContent = v.toFixed(1);
+  }
+  if(volDecBtn){ volDecBtn.addEventListener('click',()=>adjustVolume(-0.1)); }
+  if(volIncBtn){ volIncBtn.addEventListener('click',()=>adjustVolume(0.1)); }
+  function setAuto(active){
+    autoPriceActive = active;
+    if(autoToggle){
+      autoToggle.classList.toggle('active',active);
+      autoToggle.setAttribute('aria-pressed',active?'true':'false');
+      autoToggle.textContent = 'Giá thị trường';
+    }
+    if(active && pricePointEl){ pricePointEl.textContent = lastPrice.toFixed(1); }
+  }
+  function adjustPrice(delta){
+    if(autoPriceActive) setAuto(false); // switch to manual (limit)
+    let val = parseFloat(pricePointEl.textContent.replace(/[^0-9.\-]/g,''));
+    if(isNaN(val)) val = lastPrice;
+    val = Math.max(0, +(val + delta).toFixed(1));
+    pricePointEl.textContent = val.toFixed(1);
+  }
+  if(autoToggle){ autoToggle.addEventListener('click',()=> setAuto(!autoPriceActive)); }
+  if(decBtn){ decBtn.addEventListener('click',()=>adjustPrice(-0.1)); }
+  if(incBtn){ incBtn.addEventListener('click',()=>adjustPrice(0.1)); }
+  // initialize displayed price
+  if(pricePointEl) pricePointEl.textContent = lastPrice.toFixed(1);
+  setAuto(true);
+
   resizeChart();
   drawChart();
   setInterval(simulate, 1000);

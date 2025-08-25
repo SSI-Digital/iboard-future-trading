@@ -23,8 +23,62 @@
 
   <main class="screen" tabindex="0">
     <div class="fullchart-wrapper">
+      <div class="chart-overlay" aria-label="Thông tin tài khoản và vị thế">
+        <div class="overlay-row">
+          <div class="cell cell-left">
+            <div class="primary balance" id="balanceValue">432,987 VNĐ</div>
+            <div class="sub">Số dư khả dụng</div>
+          </div>
+          <div class="cell cell-right">
+            <div class="primary profit positive" id="profitPercent">+12.34%</div>
+            <div class="sub">1 vị thế</div>
+          </div>
+        </div>
+        <div class="overlay-center" aria-label="Mã phái sinh và biến động">
+          <div class="instrument" id="instrumentCode">VN30F2509</div>
+          <div class="instrument-change positive" id="instrumentChange">+5.6 (+0.31%)</div>
+        </div>
+      </div>
       <canvas id="v2Chart" aria-label="Biểu đồ giá toàn màn hình"></canvas>
       <div class="floating-price" id="v2Floating">--</div>
+      <div class="trade-stats-bar" aria-label="Giá và Khối lượng">
+        <div class="stat-box price-box" aria-live="polite">
+          <div class="stat-label-row">
+            <div class="stat-label">Giá (Điểm)</div>
+            <button type="button" class="auto-pill active" id="autoPriceToggle" aria-pressed="true" aria-label="Bật/Tắt giá tự động">Giá tự động</button>
+          </div>
+          <div class="value-row">
+            <button type="button" class="adj-btn minus" id="priceDec" aria-label="Giảm giá 0.1">−</button>
+            <span class="stat-value" id="pricePoint">--</span>
+            <button type="button" class="adj-btn plus" id="priceInc" aria-label="Tăng giá 0.1">+</button>
+          </div>
+        </div>
+        <div class="stat-box volume-box" aria-live="polite">
+          <div class="stat-label-row">
+            <div class="stat-label">Khối Lượng (Hợp Đồng)</div>
+            <span class="auto-pill placeholder" aria-hidden="true">&nbsp;</span>
+          </div>
+          <div class="value-row">
+            <button type="button" class="adj-btn minus" id="volDec" aria-label="Giảm khối lượng 0.1">−</button>
+            <span class="stat-value" id="volumeContracts">0.1</span>
+            <button type="button" class="adj-btn plus" id="volInc" aria-label="Tăng khối lượng 0.1">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="action-bar" aria-label="Mua / Bán nhanh">
+        <button class="action-btn buy" id="quickBuy" type="button" aria-label="Mua / Long">
+          <span class="shape" aria-hidden="true"></span>
+          <span class="text-wrap">
+            <span class="line label">Mua/Long</span>
+          </span>
+        </button>
+        <button class="action-btn sell" id="quickSell" type="button" aria-label="Bán / Short">
+          <span class="shape" aria-hidden="true"></span>
+          <span class="text-wrap">
+            <span class="line label">Bán/Short</span>
+          </span>
+        </button>
+      </div>
     </div>
   </main>
 
