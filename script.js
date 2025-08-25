@@ -356,7 +356,7 @@ function formatNumber(n){
 // Timeframe switching (demo only — regenerate synthetic series)
 function setTimeframe(tf){
   // For 'Line' we keep existing; for others adjust point count
-  const map = { 'Line': 60, '1m': 120, '5m': 80, '15m': 60, '30m':50, '60m':40, '2h':30, '4h':25, '8h':20 };
+  const map = { 'Line': 60, '1m': 120, '5m': 80, '15m': 60, '30m':50, '60m':40};
   const points = map[tf] || 60;
   chartData = [];
   for (let i=0;i<points;i++) chartData.push(state.lastPrice + Math.sin(i/6)*6 + (Math.random()-0.5)*5);
